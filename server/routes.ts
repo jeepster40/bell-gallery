@@ -55,7 +55,7 @@ export function registerRoutes(httpServer: Server, app: Express) {
           }
 
           return storage.addUpload({
-            filename: file.filename,
+            filename: file.originalname,
             originalName: file.originalname,
             mimeType: file.mimetype,
             size: file.size,
@@ -118,10 +118,6 @@ export function registerRoutes(httpServer: Server, app: Express) {
         console.error("Cloudinary delete failed:", err);
       }
     }
-
-    // Also clean up any lingering local temp file
-    const filePath = path.join(UPLOAD_DIR, item.filename);
-    if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
 
     await storage.deleteUpload(id);
     res.json({ success: true });
