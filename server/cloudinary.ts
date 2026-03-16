@@ -1,4 +1,5 @@
 import { v2 as cloudinary } from "cloudinary";
+import sharp from "sharp";
 import type { UploadApiResponse } from "cloudinary";
 
 cloudinary.config({
@@ -33,6 +34,21 @@ export async function uploadToCloudinary(
   contextParts.push(`original_name=${originalName.replace(/[|=]/g, " ")}`);
   contextParts.push(`mime_type=${mimeType}`);
 
+  // Compress large images before upload to avoid timeout on Render
+  let uploadBuffer = fileBuffer;
+  if (!isVideo && fileBuffer.length > 5 * 1024 * 1024) {
+    try {
+      uploadBuffer = await sharp(fileBuffer)
+        .resize({ width: 4000, height: 4000, fit: "inside", withoutEnlargement: true })
+        .jpeg({ quality: 85 })
+        .toBuffer();
+      console.log(`[cloudinary] Compressed ${fileBuffer.length} → ${uploadBuffer.length} bytes`);
+    } catch (e) {
+      console.warn("[cloudinary] Compression failed, using original:", e);
+      uploadBuffer = fileBuffer;
+    }
+  }
+
   // Upload from buffer using upload_stream
   const result: UploadApiResponse = await new Promise((resolve, reject) => {
     const stream = cloudinary.uploader.upload_stream(
@@ -50,7 +66,7 @@ export async function uploadToCloudinary(
         resolve(result!);
       }
     );
-    stream.end(fileBuffer);
+    stream.end(uploadBuffer);
   });
 
   // Generate thumbnail URL — clean format, no signed params
