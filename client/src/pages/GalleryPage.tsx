@@ -35,12 +35,12 @@ export default function GalleryPage() {
   const { data: uploads, isLoading, refetch } = useQuery<Upload[]>({
     queryKey: ["/api/gallery", password],
     queryFn: async () => {
-      if (!authed) return [];
       const res = await apiRequest("GET", `/api/gallery?pw=${encodeURIComponent(password)}`);
       if (!res.ok) throw new Error("Invalid password");
       return res.json();
     },
     enabled: authed,
+    staleTime: 0,
   });
 
   const handleUnlock = async () => {
