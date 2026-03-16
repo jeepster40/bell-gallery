@@ -185,6 +185,20 @@ export function registerRoutes(httpServer: Server, app: Express) {
   });
 
 
+  // Upload debug — captures exact Cloudinary error
+  app.post("/api/debug/upload-test", upload.single("file"), async (req: Request, res: Response) => {
+    const file = req.file as Express.Multer.File;
+    if (!file) return res.status(400).json({ error: "no file" });
+    try {
+      const result = await uploadToCloudinary(file.path, file.originalname, file.mimetype);
+      res.json({ ok: true, result });
+    } catch (err: any) {
+      res.status(500).json({ ok: false, error: String(err), nested: err?.error, message: err?.message || err?.error?.message, http_code: err?.http_code || err?.error?.http_code });
+    } finally {
+      try { fs.unlinkSync(file.path); } catch {}
+    }
+  });
+
   // Temporary debug endpoint — test Cloudinary connectivity
   app.get("/api/debug/cloudinary", async (_req: Request, res: Response) => {
     try {
