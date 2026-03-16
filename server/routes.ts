@@ -190,15 +190,15 @@ export function registerRoutes(httpServer: Server, app: Express) {
     try {
       const { v2: cld } = require("cloudinary");
       cld.config({
-        cloud_name: process.env.CLOUDINARY_CLOUD_NAME || "dsxd3fzyo",
-        api_key: process.env.CLOUDINARY_API_KEY || "713463948385651",
-        api_secret: process.env.CLOUDINARY_API_SECRET || "VN0oBiMBRvi4IEQngmpQ0Ku9I_M",
+        cloud_name: "dsxd3fzyo",
+        api_key: "713463948385651",
+        api_secret: "VN0oBiMBRvi4IEQngmpQ0Ku9I_M",
         secure: true,
       });
       const ping = await cld.api.ping();
-      res.json({ ok: true, ping, env_cloud: process.env.CLOUDINARY_CLOUD_NAME });
+      res.json({ ok: true, ping, env_cloud: process.env.CLOUDINARY_CLOUD_NAME || "not set" });
     } catch (err: any) {
-      res.status(500).json({ ok: false, error: String(err), message: err?.message, http_code: err?.http_code, name: err?.name });
+      res.status(500).json({ ok: false, nested_error: err?.error, message: err?.error?.message, http_code: err?.error?.http_code, env_cloud: process.env.CLOUDINARY_CLOUD_NAME || "not set" });
     }
   });
 

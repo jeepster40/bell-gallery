@@ -3,9 +3,9 @@ import type { UploadApiResponse } from "cloudinary";
 import fs from "fs";
 
 cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME || "dsxd3fzyo",
-  api_key: process.env.CLOUDINARY_API_KEY || "713463948385651",
-  api_secret: process.env.CLOUDINARY_API_SECRET || "VN0oBiMBRvi4IEQngmpQ0Ku9I_M",
+  cloud_name: "dsxd3fzyo",
+  api_key: "713463948385651",
+  api_secret: "VN0oBiMBRvi4IEQngmpQ0Ku9I_M",
   secure: true,
 });
 
