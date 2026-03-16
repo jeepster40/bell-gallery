@@ -6,25 +6,11 @@ import fs from "fs";
 import { storage } from "./storage";
 import { uploadToCloudinary, deleteFromCloudinary } from "./cloudinary";
 
-const UPLOAD_DIR = path.join(process.cwd(), "uploads");
-if (!fs.existsSync(UPLOAD_DIR)) {
-  fs.mkdirSync(UPLOAD_DIR, { recursive: true });
-}
-
 const GALLERY_PASSWORD = "BellWedding2026";
 const ADMIN_PIN = "4218";
 
-const multerStorage = multer.diskStorage({
-  destination: (_req, _file, cb) => cb(null, UPLOAD_DIR),
-  filename: (_req, file, cb) => {
-    const unique = `${Date.now()}-${Math.round(Math.random() * 1e9)}`;
-    const ext = path.extname(file.originalname);
-    cb(null, `${unique}${ext}`);
-  },
-});
-
 const upload = multer({
-  storage: multerStorage,
+  storage: multer.memoryStorage(),
   limits: { fileSize: 100 * 1024 * 1024 }, // 100MB max
   fileFilter: (_req, file, cb) => {
     const allowed = /jpeg|jpg|png|gif|webp|heic|heif|mp4|mov|avi|webm/i;
@@ -58,7 +44,7 @@ export function registerRoutes(httpServer: Server, app: Express) {
           let resourceType: string | null = null;
 
           try {
-            const result = await uploadToCloudinary(file.path, file.originalname, file.mimetype, uploaderName, caption);
+            const result = await uploadToCloudinary(file.buffer, file.originalname, file.mimetype, uploaderName, caption);
             cloudinaryId = result.publicId;
             cloudinaryUrl = result.url;
             cloudinaryThumb = result.thumbnailUrl;
@@ -67,11 +53,6 @@ export function registerRoutes(httpServer: Server, app: Express) {
             console.error("Cloudinary upload failed:", err);
             // Fall through — still save record, just without Cloudinary URLs
           }
-
-          // Delete temp local file
-          try {
-            if (fs.existsSync(file.path)) fs.unlinkSync(file.path);
-          } catch { /* ignore */ }
 
           return storage.addUpload({
             filename: file.filename,
@@ -190,12 +171,10 @@ export function registerRoutes(httpServer: Server, app: Express) {
     const file = req.file as Express.Multer.File;
     if (!file) return res.status(400).json({ error: "no file" });
     try {
-      const result = await uploadToCloudinary(file.path, file.originalname, file.mimetype);
+      const result = await uploadToCloudinary(file.buffer, file.originalname, file.mimetype);
       res.json({ ok: true, result });
     } catch (err: any) {
       res.status(500).json({ ok: false, error: String(err), nested: err?.error, message: err?.message || err?.error?.message, http_code: err?.http_code || err?.error?.http_code });
-    } finally {
-      try { fs.unlinkSync(file.path); } catch {}
     }
   });
 

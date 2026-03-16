@@ -1,6 +1,5 @@
 import { v2 as cloudinary } from "cloudinary";
 import type { UploadApiResponse } from "cloudinary";
-import fs from "fs";
 
 cloudinary.config({
   cloud_name: "dsxd3fzyo",
@@ -18,7 +17,7 @@ export interface CloudinaryResult {
 }
 
 export async function uploadToCloudinary(
-  filePath: string,
+  fileBuffer: Buffer,
   originalName: string,
   mimeType: string,
   uploaderName?: string,
@@ -34,19 +33,24 @@ export async function uploadToCloudinary(
   contextParts.push(`original_name=${originalName.replace(/[|=]/g, " ")}`);
   contextParts.push(`mime_type=${mimeType}`);
 
-  const result: UploadApiResponse = await cloudinary.uploader.upload(filePath, {
-    resource_type: resourceType,
-    folder: "bell-celebration",
-    use_filename: true,
-    unique_filename: true,
-    overwrite: false,
-    context: contextParts.join("|"),
-    // For images: auto quality + format
-    ...(isVideo
-      ? {}
-      : {
-          transformation: [{ quality: "auto", fetch_format: "auto" }],
-        }),
+  // Upload from buffer using upload_stream
+  const result: UploadApiResponse = await new Promise((resolve, reject) => {
+    const stream = cloudinary.uploader.upload_stream(
+      {
+        resource_type: resourceType,
+        folder: "bell-celebration",
+        use_filename: true,
+        unique_filename: true,
+        overwrite: false,
+        context: contextParts.join("|"),
+        ...(isVideo ? {} : { transformation: [{ quality: "auto", fetch_format: "auto" }] }),
+      },
+      (error, result) => {
+        if (error) return reject(error);
+        resolve(result!);
+      }
+    );
+    stream.end(fileBuffer);
   });
 
   // Generate thumbnail URL — clean format, no signed params
