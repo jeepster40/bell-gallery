@@ -150,7 +150,7 @@ export default function GalleryPage() {
       {/* Header */}
       <div style={{ textAlign: "center", marginBottom: "var(--space-8)" }}>
         <h1 style={{ fontFamily: "var(--font-display)", fontSize: "var(--text-2xl)", fontWeight: 400, color: "var(--color-text)", marginBottom: "var(--space-2)" }}>
-          Celebration Gallery
+          Mr. & Mrs. Bell Gallery
         </h1>
         <p style={{ color: "var(--color-text-muted)", fontSize: "var(--text-sm)" }}>
           {isLoading ? "Loading…" : `${items.length} ${items.length === 1 ? "memory" : "memories"} shared`}

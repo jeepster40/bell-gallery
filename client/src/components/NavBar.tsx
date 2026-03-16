@@ -69,7 +69,7 @@ export default function NavBar() {
               color: "var(--color-text)",
               letterSpacing: "0.01em",
             }}>
-              Bell Celebration
+              Mr. & Mrs. Bell
             </span>
           </a>
 
