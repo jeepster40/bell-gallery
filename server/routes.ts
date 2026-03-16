@@ -12,7 +12,7 @@ if (!fs.existsSync(UPLOAD_DIR)) {
 }
 
 const GALLERY_PASSWORD = "BellWedding2026";
-const ADMIN_PIN = "2355";
+const ADMIN_PIN = "4218";
 
 const multerStorage = multer.diskStorage({
   destination: (_req, _file, cb) => cb(null, UPLOAD_DIR),
@@ -58,7 +58,7 @@ export function registerRoutes(httpServer: Server, app: Express) {
           let resourceType: string | null = null;
 
           try {
-            const result = await uploadToCloudinary(file.path, file.originalname, file.mimetype);
+            const result = await uploadToCloudinary(file.path, file.originalname, file.mimetype, uploaderName, caption);
             cloudinaryId = result.publicId;
             cloudinaryUrl = result.url;
             cloudinaryThumb = result.thumbnailUrl;
@@ -168,6 +168,20 @@ export function registerRoutes(httpServer: Server, app: Express) {
   app.post("/api/verify-pin", (req: Request, res: Response) => {
     const { pin } = req.body;
     res.json({ valid: pin === ADMIN_PIN });
+  });
+
+  // Manual Cloudinary sync (admin)
+  app.post("/api/admin/sync", async (req: Request, res: Response) => {
+    const pin = req.query.pin as string;
+    if (pin !== ADMIN_PIN) {
+      return res.status(401).json({ error: "Invalid PIN" });
+    }
+    try {
+      const added = await storage.syncFromCloudinary();
+      res.json({ success: true, added });
+    } catch (err: any) {
+      res.status(500).json({ error: err.message });
+    }
   });
 
   // Stats (public)

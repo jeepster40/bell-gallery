@@ -61,6 +61,19 @@ export default function AdminPage() {
     onError: () => toast({ title: "Failed", variant: "destructive" }),
   });
 
+  const syncMutation = useMutation({
+    mutationFn: async () => {
+      const res = await apiRequest("POST", `/api/admin/sync?pin=${encodeURIComponent(pin)}`);
+      if (!res.ok) throw new Error("Sync failed");
+      return res.json();
+    },
+    onSuccess: (data) => {
+      qc.invalidateQueries({ queryKey: ["/api/admin/uploads"] });
+      toast({ title: `Synced from Cloudinary`, description: `${data.added} new photo(s) recovered` });
+    },
+    onError: () => toast({ title: "Sync failed", variant: "destructive" }),
+  });
+
   const handleUnlock = async () => {
     try {
       const res = await apiRequest("POST", "/api/verify-pin", { pin });
@@ -150,10 +163,16 @@ export default function AdminPage() {
           </h1>
           <p style={{ color: "var(--color-text-muted)", fontSize: "var(--text-sm)" }}>Manage all guest uploads</p>
         </div>
-        <button onClick={() => refetch()} data-testid="btn-refresh" style={{ display: "flex", alignItems: "center", gap: "0.375rem", padding: "0.5rem 1rem", borderRadius: "var(--radius-full)", border: "1px solid var(--color-border)", color: "var(--color-text-muted)", fontSize: "var(--text-sm)", background: "transparent", cursor: "pointer" }}>
-          <RefreshCw size={14} />
-          Refresh
-        </button>
+        <div style={{ display: "flex", gap: "var(--space-2)" }}>
+          <button onClick={() => syncMutation.mutate()} disabled={syncMutation.isPending} data-testid="btn-sync" style={{ display: "flex", alignItems: "center", gap: "0.375rem", padding: "0.5rem 1rem", borderRadius: "var(--radius-full)", border: "1px solid var(--color-primary)", color: "var(--color-primary)", fontSize: "var(--text-sm)", background: "transparent", cursor: "pointer", opacity: syncMutation.isPending ? 0.6 : 1 }}>
+            <RefreshCw size={14} style={{ animation: syncMutation.isPending ? "spin 1s linear infinite" : "none" }} />
+            {syncMutation.isPending ? "Syncing…" : "Sync from Cloudinary"}
+          </button>
+          <button onClick={() => refetch()} data-testid="btn-refresh" style={{ display: "flex", alignItems: "center", gap: "0.375rem", padding: "0.5rem 1rem", borderRadius: "var(--radius-full)", border: "1px solid var(--color-border)", color: "var(--color-text-muted)", fontSize: "var(--text-sm)", background: "transparent", cursor: "pointer" }}>
+            <RefreshCw size={14} />
+            Refresh
+          </button>
+        </div>
       </div>
 
       {/* Stats */}
