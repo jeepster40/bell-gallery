@@ -147,11 +147,6 @@ export function registerRoutes(httpServer: Server, app: Express) {
     res.json({ valid: pin === ADMIN_PIN });
   });
 
-  // Manual Cloudinary sync (admin)
-  app.post("/api/admin/sync", async (req: Request, res: Response) => {
-    const pin = req.query.pin as string;
-    if (pin !== ADMIN_PIN) {
-      return res.status(401).json({ error: "Invalid PIN" });
     }
     try {
       const added = await storage.syncFromCloudinary();
