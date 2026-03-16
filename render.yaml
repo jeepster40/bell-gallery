@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: bell-gallery
+    runtime: node
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: CLOUDINARY_CLOUD_NAME
+        value: dsxd3fzyo
+      - key: CLOUDINARY_API_KEY
+        value: "713463948385651"
+      - key: CLOUDINARY_API_SECRET
+        value: VN0oBiMBRvi4IEQngmpQ0Ku9I_M
