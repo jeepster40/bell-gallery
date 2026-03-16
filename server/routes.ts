@@ -188,11 +188,10 @@ export function registerRoutes(httpServer: Server, app: Express) {
   // Temporary debug endpoint — test Cloudinary connectivity
   app.get("/api/debug/cloudinary", async (_req: Request, res: Response) => {
     try {
-      const { v2 as cloudinary } = await import("cloudinary");
-      const result = await cloudinary.api.ping();
-      res.json({ ok: true, result, cloud_name: process.env.CLOUDINARY_CLOUD_NAME || "dsxd3fzyo (fallback)" });
+      const result = await (await import("./cloudinary")).fetchAllFromCloudinary();
+      res.json({ ok: true, count: result.length, cloud_name: process.env.CLOUDINARY_CLOUD_NAME || "dsxd3fzyo (fallback)" });
     } catch (err: any) {
-      res.status(500).json({ ok: false, error: err.message, stack: err.stack?.slice(0, 500) });
+      res.status(500).json({ ok: false, error: err.message });
     }
   });
 
