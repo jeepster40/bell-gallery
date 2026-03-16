@@ -61,11 +61,6 @@ export default function AdminPage() {
     onError: () => toast({ title: "Failed", variant: "destructive" }),
   });
 
-      toast({ title: `Synced from Cloudinary`, description: `${data.added} new photo(s) recovered` });
-    },
-    onError: () => toast({ title: "Sync failed", variant: "destructive" }),
-  });
-
   const handleUnlock = async () => {
     try {
       const res = await apiRequest("POST", "/api/verify-pin", { pin });
