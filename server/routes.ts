@@ -147,15 +147,6 @@ export function registerRoutes(httpServer: Server, app: Express) {
     res.json({ valid: pin === ADMIN_PIN });
   });
 
-    }
-    try {
-      const added = await storage.syncFromCloudinary();
-      res.json({ success: true, added });
-    } catch (err: any) {
-      res.status(500).json({ error: err.message });
-    }
-  });
-
 
   // Upload debug — captures exact Cloudinary error
   app.post("/api/debug/upload-test", upload.single("file"), async (req: Request, res: Response) => {
