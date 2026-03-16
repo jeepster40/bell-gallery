@@ -49,20 +49,12 @@ export async function uploadToCloudinary(
         }),
   });
 
-  // Generate thumbnail URL
+  // Generate thumbnail URL — clean format, no signed params
+  const cloudName = "dsxd3fzyo";
+  const thumbTransform = "c_fill,h_400,w_400,q_auto";
   const thumbnailUrl = isVideo
-    ? cloudinary.url(result.public_id, {
-        resource_type: "video",
-        transformation: [
-          { width: 400, height: 400, crop: "fill", start_offset: "0" },
-          { format: "jpg" },
-        ],
-      })
-    : cloudinary.url(result.public_id, {
-        transformation: [
-          { width: 400, height: 400, crop: "fill", quality: "auto" },
-        ],
-      });
+    ? `https://res.cloudinary.com/${cloudName}/video/upload/${thumbTransform}/so_0,f_jpg/${result.public_id}.jpg`
+    : `https://res.cloudinary.com/${cloudName}/image/upload/${thumbTransform}/${result.public_id}`;
 
   return {
     publicId: result.public_id,
@@ -96,20 +88,11 @@ export async function fetchAllFromCloudinary(): Promise<CloudinaryResult[]> {
         next_cursor: nextCursor,
       });
       for (const asset of response.resources) {
+        const thumbT = "c_fill,h_400,w_400,q_auto";
         const thumbnailUrl =
           resourceType === "video"
-            ? cloudinary.url(asset.public_id, {
-                resource_type: "video",
-                transformation: [
-                  { width: 400, height: 400, crop: "fill", start_offset: "0" },
-                  { format: "jpg" },
-                ],
-              })
-            : cloudinary.url(asset.public_id, {
-                transformation: [
-                  { width: 400, height: 400, crop: "fill", quality: "auto" },
-                ],
-              });
+            ? `https://res.cloudinary.com/dsxd3fzyo/video/upload/${thumbT}/so_0,f_jpg/${asset.public_id}.jpg`
+            : `https://res.cloudinary.com/dsxd3fzyo/image/upload/${thumbT}/${asset.public_id}`;
         results.push({
           publicId: asset.public_id,
           url: asset.secure_url,
