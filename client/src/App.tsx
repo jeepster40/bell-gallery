@@ -5,7 +5,6 @@ import { Toaster } from "@/components/ui/toaster";
 import UploadPage from "@/pages/UploadPage";
 import GalleryPage from "@/pages/GalleryPage";
 import AdminPage from "@/pages/AdminPage";
-import PerplexityAttribution from "@/components/PerplexityAttribution";
 import NavBar from "@/components/NavBar";
 import { queryClient } from "@/lib/queryClient";
 
@@ -27,7 +26,6 @@ export default function App() {
               </div>
             </Route>
           </Switch>
-          <PerplexityAttribution />
           <Toaster />
         </div>
       </Router>
