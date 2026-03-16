@@ -11,7 +11,7 @@ if (!fs.existsSync(UPLOAD_DIR)) {
   fs.mkdirSync(UPLOAD_DIR, { recursive: true });
 }
 
-const GALLERY_PASSWORD = "Love";
+const GALLERY_PASSWORD = "BellWedding2026";
 const ADMIN_PIN = "2355";
 
 const multerStorage = multer.diskStorage({
