@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Shield, Trash2, Eye, EyeOff, Download, BarChart3, Image, Film, RefreshCw } from "lucide-react";
+import JSZip from "jszip";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import type { Upload } from "@shared/schema";
@@ -25,10 +26,37 @@ function downloadUrl(item: Upload): string {
   return `/uploads/${item.filename}`;
 }
 
+async function downloadAll(uploads: Upload[]) {
+  const zip = new JSZip();
+  const folder = zip.folder("bell-gallery");
+  if (!folder) return;
+
+  await Promise.all(
+    uploads.map(async (item) => {
+      const url = item.cloudinaryUrl;
+      if (!url) return;
+      try {
+        const res = await fetch(url);
+        const blob = await res.blob();
+        const ext = item.originalName.includes(".") ? "" : `.${blob.type.split("/")[1] || "jpg"}`;
+        folder.file(`${item.originalName}${ext}`, blob);
+      } catch {}
+    })
+  );
+
+  const blob = await zip.generateAsync({ type: "blob" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "bell-gallery-photos.zip";
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+
 export default function AdminPage() {
   const [pin, setPin] = useState("");
   const [authed, setAuthed] = useState(false);
   const [pinError, setPinError] = useState(false);
+  const [downloading, setDownloading] = useState(false);
   const { toast } = useToast();
   const qc = useQueryClient();
 
@@ -150,10 +178,21 @@ export default function AdminPage() {
           </h1>
           <p style={{ color: "var(--color-text-muted)", fontSize: "var(--text-sm)" }}>Manage all guest uploads</p>
         </div>
-        <button onClick={() => refetch()} data-testid="btn-refresh" style={{ display: "flex", alignItems: "center", gap: "0.375rem", padding: "0.5rem 1rem", borderRadius: "var(--radius-full)", border: "1px solid var(--color-border)", color: "var(--color-text-muted)", fontSize: "var(--text-sm)", background: "transparent", cursor: "pointer" }}>
-          <RefreshCw size={14} />
-          Refresh
-        </button>
+        <div style={{ display: "flex", gap: "var(--space-2)" }}>
+          <button
+            onClick={async () => { setDownloading(true); await downloadAll(items); setDownloading(false); }}
+            disabled={downloading || items.length === 0}
+            data-testid="btn-download-all"
+            style={{ display: "flex", alignItems: "center", gap: "0.375rem", padding: "0.5rem 1rem", borderRadius: "var(--radius-full)", border: "1px solid var(--color-primary)", color: "var(--color-primary)", fontSize: "var(--text-sm)", background: "transparent", cursor: items.length === 0 ? "not-allowed" : "pointer", opacity: (downloading || items.length === 0) ? 0.5 : 1 }}
+          >
+            <Download size={14} />
+            {downloading ? "Zipping…" : `Download All (${items.length})`}
+          </button>
+          <button onClick={() => refetch()} data-testid="btn-refresh" style={{ display: "flex", alignItems: "center", gap: "0.375rem", padding: "0.5rem 1rem", borderRadius: "var(--radius-full)", border: "1px solid var(--color-border)", color: "var(--color-text-muted)", fontSize: "var(--text-sm)", background: "transparent", cursor: "pointer" }}>
+            <RefreshCw size={14} />
+            Refresh
+          </button>
+        </div>
       </div>
 
       {/* Stats */}
