@@ -1,12 +1,38 @@
 import { useHashLocation } from "wouter/use-hash-location";
 import { Camera, Images, Shield, Moon, Sun } from "lucide-react";
 import { useState, useEffect } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
 
 export default function NavBar() {
   const [loc] = useHashLocation();
   const [dark, setDark] = useState(() =>
     window.matchMedia("(prefers-color-scheme: dark)").matches
   );
+
+  // Track last-seen upload count in sessionStorage (no localStorage — blocked in sandbox)
+  const { data: stats } = useQuery({
+    queryKey: ["/api/stats"],
+    queryFn: async () => {
+      const res = await apiRequest("GET", "/api/stats");
+      return res.json() as Promise<{ total: number; approved: number }>;
+    },
+    refetchInterval: 30000, // poll every 30s
+  });
+
+  const [lastSeen, setLastSeen] = useState<number>(() => {
+    try { return parseInt(sessionStorage.getItem("lastSeenCount") || "0"); } catch { return 0; }
+  });
+
+  // When admin page is active, mark all as seen
+  useEffect(() => {
+    if (loc === "/admin" && stats) {
+      setLastSeen(stats.total);
+      try { sessionStorage.setItem("lastSeenCount", String(stats.total)); } catch {}
+    }
+  }, [loc2, stats]);
+
+  const newCount = stats ? Math.max(0, stats.total - lastSeen) : 0;
 
   useEffect(() => {
     document.documentElement.setAttribute("data-theme", dark ? "dark" : "light");
@@ -83,9 +109,30 @@ export default function NavBar() {
             <Images size={15} />
             <span className="hidden sm:inline">Gallery</span>
           </a>
-          <a href="#/admin" style={linkStyle(loc === "/admin")} data-testid="nav-admin">
+          <a href="#/admin" style={{ ...linkStyle(loc === "/admin"), position: "relative" }} data-testid="nav-admin">
             <Shield size={15} />
             <span className="hidden sm:inline">Admin</span>
+            {newCount > 0 && (
+              <span style={{
+                position: "absolute",
+                top: "-4px",
+                right: "-4px",
+                minWidth: "18px",
+                height: "18px",
+                borderRadius: "9px",
+                background: "var(--color-primary)",
+                color: "#fff",
+                fontSize: "11px",
+                fontWeight: 700,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                padding: "0 4px",
+                lineHeight: 1,
+              }}>
+                {newCount > 99 ? "99+" : newCount}
+              </span>
+            )}
           </a>
 
           <button
