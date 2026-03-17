@@ -10,34 +10,40 @@ export default function NavBar() {
     window.matchMedia("(prefers-color-scheme: dark)").matches
   );
 
-  // Track last-seen upload count in sessionStorage (no localStorage — blocked in sandbox)
+  useEffect(() => {
+    document.documentElement.setAttribute("data-theme", dark ? "dark" : "light");
+    document.documentElement.classList.toggle("dark", dark);
+  }, [dark]);
+
+  // Poll for new uploads every 30s
   const { data: stats } = useQuery({
     queryKey: ["/api/stats"],
     queryFn: async () => {
       const res = await apiRequest("GET", "/api/stats");
       return res.json() as Promise<{ total: number; approved: number }>;
     },
-    refetchInterval: 30000, // poll every 30s
+    refetchInterval: 30000,
   });
 
-  const [lastSeen, setLastSeen] = useState<number>(() => {
-    try { return parseInt(sessionStorage.getItem("lastSeenCount") || "0"); } catch { return 0; }
-  });
+  const [lastSeen, setLastSeen] = useState<number>(0);
+  const [initialized, setInitialized] = useState(false);
 
-  // When admin page is active, mark all as seen
+  // Set baseline on first data load
   useEffect(() => {
-    if (loc === "/admin" && stats) {
+    if (stats && !initialized) {
       setLastSeen(stats.total);
-      try { sessionStorage.setItem("lastSeenCount", String(stats.total)); } catch {}
+      setInitialized(true);
     }
-  }, [loc2, stats]);
+  }, [stats, initialized]);
 
-  const newCount = stats ? Math.max(0, stats.total - lastSeen) : 0;
-
+  // Clear badge when admin page is open
   useEffect(() => {
-    document.documentElement.setAttribute("data-theme", dark ? "dark" : "light");
-    document.documentElement.classList.toggle("dark", dark);
-  }, [dark]);
+    if (loc === "/admin" && stats && initialized) {
+      setLastSeen(stats.total);
+    }
+  }, [loc, stats, initialized]);
+
+  const newCount = (stats && initialized) ? Math.max(0, stats.total - lastSeen) : 0;
 
   const linkStyle = (active: boolean) => ({
     display: "flex",
@@ -84,7 +90,6 @@ export default function NavBar() {
               <path d="M9 13.5C9 10.74 11.24 8.5 14 8.5C16.76 8.5 19 10.74 19 13.5V17.5H9V13.5Z" fill="var(--color-primary)" fillOpacity="0.15" stroke="var(--color-primary)" strokeWidth="1.5" strokeLinejoin="round"/>
               <path d="M12 17.5C12 18.6 12.9 19.5 14 19.5C15.1 19.5 16 18.6 16 17.5" stroke="var(--color-primary)" strokeWidth="1.5"/>
               <circle cx="14" cy="8" r="1" fill="var(--color-primary)"/>
-              {/* Rings */}
               <path d="M6 21 C6 19.5 8 18.5 10 19 C10.8 19.2 11 20 10 20.5" stroke="var(--color-gold)" strokeWidth="1.2" fill="none" strokeLinecap="round"/>
               <path d="M11 21 C11 19.5 13 18.5 15 19 C15.8 19.2 16 20 15 20.5" stroke="var(--color-gold)" strokeWidth="1.2" fill="none" strokeLinecap="round"/>
             </svg>
