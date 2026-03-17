@@ -202,11 +202,16 @@ export default function GalleryPage() {
                   <Play size={14} fill="#fff" color="#fff" />
                 </div>
               )}
-              {item.uploaderName && (
-                <div style={{ position: "absolute", bottom: "0", left: "0", right: "0", padding: "1rem 0.75rem 0.5rem", background: "linear-gradient(transparent, rgba(0,0,0,0.55))", color: "#fff", fontSize: "var(--text-xs)", opacity: 0, transition: "opacity 200ms ease" }}
-                  className="card-caption"
-                >
-                  {item.uploaderName}
+              {(item.caption || item.uploaderName) && (
+                <div style={{ position: "absolute", bottom: "0", left: "0", right: "0", padding: "1.5rem 0.75rem 0.5rem", background: "linear-gradient(transparent, rgba(0,0,0,0.7))", color: "#fff", fontSize: "var(--text-xs)" }}>
+                  {item.caption && (
+                    <p style={{ fontFamily: "var(--font-display)", fontStyle: "italic", fontSize: "var(--text-sm)", marginBottom: "0.1rem", lineHeight: 1.3 }}>
+                      {item.caption}
+                    </p>
+                  )}
+                  {item.uploaderName && (
+                    <p style={{ opacity: 0.75, fontSize: "11px" }}>— {item.uploaderName}</p>
+                  )}
                 </div>
               )}
             </div>
@@ -276,7 +281,6 @@ export default function GalleryPage() {
         </div>
       )}
 
-      <style>{`.media-card:hover .card-caption { opacity: 1 !important; }`}</style>
     </main>
   );
 }
