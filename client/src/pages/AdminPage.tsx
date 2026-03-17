@@ -53,8 +53,10 @@ async function downloadAll(uploads: Upload[]) {
 }
 
 export default function AdminPage() {
-  const [pin, setPin] = useState("");
-  const [authed, setAuthed] = useState(false);
+  const ADMIN_KEY = "admin_pin_session";
+  const savedPin = (() => { try { return sessionStorage.getItem(ADMIN_KEY) || ""; } catch { return ""; } })();
+  const [pin, setPin] = useState(savedPin);
+  const [authed, setAuthed] = useState(!!savedPin);
   const [pinError, setPinError] = useState(false);
   const [downloading, setDownloading] = useState(false);
   const { toast } = useToast();
@@ -93,7 +95,7 @@ export default function AdminPage() {
     try {
       const res = await apiRequest("POST", "/api/verify-pin", { pin });
       const data = await res.json();
-      if (data.valid) { setAuthed(true); setPinError(false); }
+      if (data.valid) { setAuthed(true); setPinError(false); try { sessionStorage.setItem(ADMIN_KEY, pin); } catch {} }
       else { setPinError(true); }
     } catch { setPinError(true); }
   };

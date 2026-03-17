@@ -27,8 +27,11 @@ function fullUrl(item: Upload): string {
 }
 
 export default function GalleryPage() {
-  const [password, setPassword] = useState("");
-  const [authed, setAuthed] = useState(false);
+  // Remember gallery unlock for the whole browser session
+  const STORAGE_KEY = "gallery_unlocked";
+  const savedPw = (() => { try { return sessionStorage.getItem(STORAGE_KEY) || ""; } catch { return ""; } })();
+  const [password, setPassword] = useState(savedPw);
+  const [authed, setAuthed] = useState(!!savedPw);
   const [authError, setAuthError] = useState(false);
   const [lightbox, setLightbox] = useState<{ idx: number } | null>(null);
 
@@ -50,6 +53,7 @@ export default function GalleryPage() {
       if (data.valid) {
         setAuthed(true);
         setAuthError(false);
+        try { sessionStorage.setItem(STORAGE_KEY, password); } catch {}
         refetch();
       } else {
         setAuthError(true);
